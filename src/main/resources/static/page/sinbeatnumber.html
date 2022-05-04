@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<head>
+        <link rel="stylesheet" href="/page/style.css">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
+        <meta name="viewport" content="width=device-width,initial-scale=1">
+        <meta charset="utf-8">
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+        <!-- jQuery-->
+</head>
+
+<body>
+    <br>
+    <div class="wrapper">
+	    <canvas id="canvas" width="1160" height="260"></canvas>
+    </div>
+    <br>
+
+    <div >
+        <h1>a * sin(b*x + c)</h1>
+        <label>a</label>
+        <input type="number" id = "avalue" name="avalue" value = 100 min="-130" max="130">
+        <label>b</label>
+        <input type="number" id = "bvalue" name="bvalue" value = 400 min="20" max="20000">
+        <label>c</label>
+        <input type="number" id = "cvalue" name="cvalue" value = 0 min="-100" max="100">
+        <button id="submitbtn" onclick="calculate();">SUBMIT</button>
+
+    </div>
+    <br>
+    <div>
+        <button id="btn" onclick="on_off();">ON/OFF</button>
+    </div>
+
+
+
+    <script>
+
+        //소리
+
+        // 1. AudioContext 생성 
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        var fff = 0;
+        var vvv = 0; 
+
+        // 2. 오디오 소스(OscillatorNode) 생성: 특정 주파수의 음을 재생하는 소스 노드 
+        let oscillatorNode = null;
+
+        // 3. 볼륨 설정을 위한 오디오 노드(GainNode) 생성 
+        const gainNode = audioContext.createGain(); 
+        gainNode.gain.value = 0 // 볼륨 설정 (0~1)
+
+        let isPlaying = false;
+
+        oscillatorNode = audioContext.createOscillator();
+
+        // 클릭 이벤트 처리 
+        //document.getElementById("btn").addEventListener("click", on_off);
+
+        function on_off(){
+            audioContext.resume();
+            if(!isPlaying){ 
+                // OscillatorNode는 1회만 재생 가능하기 때문에 
+                // 새로 재생할 때마다 새로 OscillatorNode를 생성해주어야 한다. 
+                oscillatorNode = audioContext.createOscillator(); 
+                // 오디오 그래프 연결 
+                oscillatorNode.connect(gainNode).connect(audioContext.destination); 
+                // 재생
+                oscillatorNode.start(); 
+                isPlaying = true;
+
+                oscillatorNode.frequency.value = fff;
+                gainNode.gain.value = vvv;
+
+            }
+            else{ 
+                // 정지 
+                oscillatorNode.stop(); 
+                isPlaying = false; 
+            }
+
+        }
+
+        oscillatorNode.type = 'sine';
+
+        //참고https://curryyou.tistory.com/453
+
+
+        //그래프/////////////////////////////////////////////////////////////////////////////////////////////////////
+        var canvas = document.getElementById('canvas');
+
+        drawAxis(); // x축 그리기 
+        drawAyis(); // y축 그리기
+        // drawSinR(canvas.height / 2); // sin 우측 그래프 그리기
+        // drawSinL(canvas.height / 2); // sin 좌측 그래프 그리기
+
+        function drawAxis() {
+            var context = canvas.getContext("2d");
+            context.beginPath();
+
+            // x Axis;
+            for (var pX = 0; pX < canvas.width; pX++) {
+                context.lineTo(pX, canvas.height / 2);
+            }
+            context.strokeStyle = "#333";
+            context.stroke();
+        }
+        function drawAyis() {
+            var context = canvas.getContext("2d");
+            context.beginPath();
+
+            // x Axis;
+            for (var pY = 0; pY < canvas.height; pY++) {
+                context.lineTo(0, pY);
+            }
+            context.strokeStyle = "#333";
+            context.stroke();
+        }
+
+        // 최대 y높이가 MAX 값을 가지는 sin 그래프 그림
+        function drawSin(a, b, c) {
+            var context = canvas.getContext("2d");
+            context.beginPath();
+            var degree = 0;
+
+            for (degree = 0; degree < canvas.width; degree+=1) {
+                var pX = degree; // 중앙에서 우측
+                var pY = (canvas.height / 2) - (Math.sin(degToRad(degree)*b + c) * a);
+                context.lineTo(pX, pY);
+            }
+            context.lineWidth = 1;
+            context.strokeStyle = "#ff0000";
+            context.stroke();
+        }
+
+        function degToRad(degree) {
+            return Math.PI / 180 * degree
+        }
+        //참고 https://jizard.tistory.com/329
+
+        function calculate(){
+            var avalue = parseInt(document.getElementById('avalue').value);
+            var bvalue = parseInt(document.getElementById('bvalue').value);
+            var cvalue = parseInt(document.getElementById('cvalue').value);
+            var clean = canvas.getContext("2d").clearRect(0,0,1160,260);
+            drawAxis();
+            drawAyis();
+            drawSin(avalue, bvalue/400, cvalue);
+            fff = bvalue;
+            vvv = Math.abs(avalue)/130;
+            oscillatorNode.frequency.value = bvalue;
+            gainNode.gain.value = Math.abs(avalue)/130;
+        }
+
+    </script>
+</body>
+
+
+</html>
